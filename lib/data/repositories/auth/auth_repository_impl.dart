@@ -1,12 +1,19 @@
+import 'dart:async';
+
 import 'package:app_arch/data/repositories/auth/auth_repository.dart';
 import 'package:app_arch/domain/entities/user_entity.dart';
+import 'package:app_arch/service/auth/auth_local_storage.dart';
 import 'package:result_dart/result_dart.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
+  AuthRepositoryImpl(this._localStorage);
+
+  final AuthLocalStorage _localStorage;
+  final _streamController = StreamController<User>.broadcast();
+
   @override
   Stream<User> userObserver() {
-    // TODO: implement userObserver
-    throw UnimplementedError();
+    return _streamController.stream;
   }
 
   @override
@@ -17,13 +24,18 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   AsyncResult<Unit> logout() {
-    // TODO: implement logout
-    throw UnimplementedError();
+    return _localStorage.removeUser().onSuccess((_) {
+      _streamController.add(const NotLoggedUser());
+    });
   }
 
   @override
   AsyncResult<LoggedUser> getUser() {
-    // TODO: implement getUser
-    throw UnimplementedError();
+    return _localStorage.getUser();
+  }
+
+  @override
+  void dispose() {
+    _streamController.close();
   }
 }

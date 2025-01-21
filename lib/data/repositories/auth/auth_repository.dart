@@ -6,4 +6,5 @@ abstract interface class AuthRepository {
   AsyncResult<Unit> logout();
   AsyncResult<LoggedUser> getUser();
   Stream<User> userObserver();
+  void dispose();
 }
