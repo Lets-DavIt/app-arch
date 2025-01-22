@@ -1,13 +1,18 @@
 import 'dart:async';
 
 import 'package:app_arch/data/repositories/auth/auth_repository.dart';
+import 'package:app_arch/domain/dtos/credentials.dart';
 import 'package:app_arch/domain/entities/user_entity.dart';
+import 'package:app_arch/domain/validators/credentials_validators.dart';
+import 'package:app_arch/service/auth/auth_client_http.dart';
 import 'package:app_arch/service/auth/auth_local_storage.dart';
+import 'package:app_arch/utils/validation/lucid_validator_extension.dart';
 import 'package:result_dart/result_dart.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._localStorage);
+  AuthRepositoryImpl(this._localStorage, this._clientHttp);
 
+  final AuthClientHttp _clientHttp;
   final AuthLocalStorage _localStorage;
   final _streamController = StreamController<User>.broadcast();
 
@@ -17,9 +22,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  AsyncResult<LoggedUser> login() {
-    // TODO: implement login
-    throw UnimplementedError();
+  AsyncResult<LoggedUser> login(Credentials credentials) {
+    final validator = CredentialsValidators();
+
+    return validator
+        .validateResult(credentials)
+        .flatMap(_clientHttp.login)
+        .flatMap(_localStorage.saveUser)
+        .onSuccess(_streamController.add);
   }
 
   @override
